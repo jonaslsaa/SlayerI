@@ -7,6 +7,8 @@ public float gameSpeedMultiplier = 1.0;
 public Player Player1;
 public Enemy[] enemies;
 
+public PImage BulletSprite;
+
 public int maxEnemiesOnScreen = 8;
 
 public boolean keyInput[] = new boolean[256];
@@ -52,9 +54,9 @@ class Player{
   public int health;
   public int damage;
   public int regenHP;
+  float bulletCooldown = 0;
   
   public PImage Sprite;
-  public PImage BulletSprite;
   
   public float spriteMultiplier = .15;
   public int spriteHeight;
@@ -70,8 +72,11 @@ class Player{
     
   }
   
+  
+  
   void update(){
     accelarationUpdate();
+    bulletUpdate();
     
     currentXSpeed = round(maxSpeed * speedAccX);
     currentYSpeed = round(maxSpeed * speedAccY);
@@ -79,6 +84,32 @@ class Player{
     xPos = xPos + round(currentXSpeed * deltaTime);
     yPos = yPos + round(currentYSpeed * deltaTime);
     
+  }
+
+  void bulletUpdate(){
+  
+    for (int i = bullets.size(); i>0;i--){
+        bullets.get(i-1).Update();
+        if(bullets.get(i-1).xPos < -50  || bullets.get(i-1).yPos < -50 || bullets.get(i-1).xPos > windowWidth || bullets.get(i-1).yPos > windowWidth){
+          bullets.remove(i-1);
+        }
+    }
+    
+    if (mousePressed && (mouseButton == LEFT)) {
+        if (bulletCooldown <= 0){
+          bulletCooldown = 80 * deltaTime;
+          if(mouseY>yPos){
+          bullets.add(new Bullet(xPos,yPos,PVector.angleBetween(new PVector(1,0),new PVector(mouseX-xPos,mouseY-yPos))));
+          }else{
+          bullets.add(new Bullet(xPos,yPos,-PVector.angleBetween(new PVector(1,0),new PVector(mouseX-xPos,mouseY-yPos))));
+          }
+        }
+      }
+    
+    if(bulletCooldown > -10){
+      bulletCooldown = bulletCooldown - (10 * deltaTime);
+    }
+  
   }
 
   void accelarationUpdate(){
@@ -140,21 +171,36 @@ class Enemy{
 
 class Bullet{
   
-  public int xPos;
-  public int yPos;
+  public int xPos, yPos;
+  public float rotation;
+  float dist;
   
-  public int maxSpeed = 8;
-  public int speedX;
-  public int speedY;
+  public int constSpeed = 5;
   
-  public int damageOnHit;
+  public PImage Sprite;
+  
+  public int damageOnHit = 50;
   public boolean isOnScreen;
   
   
-  Bullet(int _damage){damageOnHit = _damage; };
+  Bullet(int _x, int _y, float _rot){
+    xPos = _x;
+    yPos = _y;
+    rotation = _rot;
   
-  void isVisible(boolean is){
+  };
+  
+  void SetVisible(boolean is){
     isOnScreen = is;
+  }
+  
+  void Update(){
+    translate(xPos,yPos);
+    rotate(rotation);
+    image(BulletSprite, dist, 0, 10, 10);
+    resetMatrix();
+    dist += constSpeed;
+  
   }
   
 }
@@ -169,13 +215,6 @@ void updateGraphics(){
   //Draws the Players sprite
   image(Player1.Sprite, Player1.xPos, Player1.yPos, Player1.spriteWidth, Player1.spriteHeight);
   
-  //Draws all bullets in frame
-  for(int b = 0; b < Player1.bullets.size(); b++){
-    Bullet getBullet = Player1.bullets.get(b);
-    if(getBullet.isOnScreen){
-      image(Player1.BulletSprite, getBullet.xPos, getBullet.xPos);
-    }
-  }
 }
 
 void updateMovement(){
@@ -196,7 +235,7 @@ void GameSetup(){
   }
   
   Player1.Sprite = loadImage("Slayer.png");
-  Player1.BulletSprite = loadImage("Bullet.png");
+  BulletSprite = loadImage("Bullet.png");
   
   Player1.spriteHeight = round(Player1.Sprite.height * Player1.spriteMultiplier);
   Player1.spriteWidth = round(Player1.Sprite.width * Player1.spriteMultiplier);
@@ -224,4 +263,6 @@ void DrawDebug(){
   text("Delta Time="+deltaTime, 20, 60);
   text("X Acceleration="+Player1.speedAccX, 20, 100);
   text("Y Acceleration="+Player1.speedAccY, 20, 120);
+  text("Bullets Alive="+Player1.bullets.size(), 20, 160);
+  text("bulletCooldown="+Player1.bulletCooldown, 20, 180);
 }
