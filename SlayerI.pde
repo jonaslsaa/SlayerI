@@ -10,19 +10,20 @@ public Enemy[] enemies;
 public PImage BulletSprite;
 public PImage StoneTile;
 public PImage BakedBG;
-public int nTiles = 64;
+public int tileSize = 96; //Scale of tiles (auto adjusted)
 
 public int maxEnemiesOnScreen = 16;
 public int maxCountdown = 500;
-public int countdown = 500;
+public int countdown;
 
 public boolean keyInput[] = new boolean[256];
 
 void setup(){
   size(800, 600);
-  frameRate(600000);
+  frameRate(144);
   Player1 = new Player(100, 50, 2, 6);
   enemies = new Enemy[maxEnemiesOnScreen];
+  countdown = maxCountdown;
   GameSetup();
   
 }
@@ -51,7 +52,6 @@ void draw(){
 
 void updateDeltaTime(){
   deltaTime = (30*gameSpeedMultiplier)/frameRate;
-  maxCountdown=round(maxCountdown*deltaTime);
 }
 
 void stop() {
@@ -63,13 +63,16 @@ void stop() {
 }
 
 void SpawnEnemies(){
-  countdown = round((countdown - 2) * deltaTime);
+  countdown = countdown - 1;
   if(countdown <= 0){ // If countdown is zero
+    maxCountdown = round(maxCountdown * 0.95);
+    countdown = maxCountdown;
     for(int e = 0; e < maxEnemiesOnScreen; e++){ //Find dead enemy and resuect him
       if(enemies[e].health <= 0){
         enemies[e].health = 100;
         enemies[e].xPos = round(random(0, windowWidth));
         enemies[e].yPos = round(random(0, windowHeight));
+        break;
       }
     }
   }
@@ -189,11 +192,11 @@ class Enemy{
   public int currentYSpeed;
   public float currentXSpeedF;
   public float currentYSpeedF;
-  public float constSpeed = 0.01;
+  public float constSpeed = 100;
   
   
   public int speed;
-  public int health = 0;
+  public int health;
   public int damage;
   
   public PImage Sprite;
@@ -210,14 +213,17 @@ class Enemy{
   }
   
   void Update(int Tx, int Ty){
-    currentXSpeedF = (Tx - xPos) / constSpeed;
-    currentYSpeedF = (Ty - yPos) / constSpeed;
+    if(health > 0){
+      currentXSpeedF = (Tx - xPos) / constSpeed;
+      currentYSpeedF = (Ty - yPos) / constSpeed;
     
-    currentXSpeed = round(currentXSpeedF);
-    currentYSpeed = round(currentYSpeedF);
-    
-    xPos = xPos + currentXSpeed;
-    yPos = yPos + currentYSpeed;
+      currentXSpeed = round(currentXSpeedF);
+      currentYSpeed = round(currentYSpeedF);
+      
+      xPos = xPos + currentXSpeed;
+      yPos = yPos + currentYSpeed;
+      println("is at "+xPos+" x "+yPos);
+    }
   }
 
 }
@@ -284,7 +290,7 @@ void updateMovement(){
 
 void GameSetup(){
   for(int e = 0; e < maxEnemiesOnScreen; e++){
-    enemies[e] = new Enemy(100, 75, 2);
+    enemies[e] = new Enemy(0, 75, 2);
     enemies[e].Sprite = loadImage("Enemy.png");
     
     enemies[e].spriteHeight = round(enemies[e].Sprite.height * enemies[e].spriteMultiplier);
@@ -323,6 +329,8 @@ void DrawDebug(){
   text("Y Acceleration="+Player1.speedAccY, 20, 120);
   text("Bullets Alive="+Player1.bullets.size(), 20, 160);
   text("bulletCooldown="+Player1.bulletCooldown, 20, 180);
+  text("countdown="+countdown, 20, 200);
+  text("maxCountdown="+maxCountdown, 20, 220);
 }
 
 
@@ -332,9 +340,9 @@ void DrawStoneTiles(){
 }
 
 void MakeStoneTiles(){
-  for(int w = 0; w < round(windowWidth/nTiles)+1; w++){
-    for(int h = 0; h < round(windowHeight/nTiles)+1; h++){
-      image(StoneTile, w*nTiles, h*nTiles, nTiles, nTiles);
+  for(int w = 0; w < round(windowWidth/tileSize)+1; w++){
+    for(int h = 0; h < round(windowHeight/tileSize)+1; h++){
+      image(StoneTile, w*tileSize, h*tileSize, tileSize, tileSize);
     }
   }
   println("rendered tiles");
