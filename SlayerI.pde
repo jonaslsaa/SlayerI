@@ -12,7 +12,7 @@ public PImage StoneTile;
 public PImage BakedBG;
 public int tileSize = 96; //Scale of tiles (auto adjusted)
 
-public int maxEnemiesOnScreen = 16;
+public int maxEnemiesOnScreen = 1;
 public int maxCountdown = 500;
 public int countdown;
 
@@ -33,7 +33,7 @@ void setup(){
 void draw(){
   if(frameCount == 1){
     MakeStoneTiles();
-    print("LOADING...");
+    println("LOADING...");
     text("LOADING...", windowWidth/2-40, windowHeight/2-20);
   } else if(frameCount == 300){
     BakedBG = loadImage("baked_background.png");
@@ -46,7 +46,7 @@ void draw(){
     
     updateMovement();
     updateGraphics();
-    
+    updateCollisions();
     SpawnEnemies();
     
     DrawDebug();
@@ -98,6 +98,7 @@ class Player{
   public int damage;
   public int regenHP;
   float bulletCooldown = 0;
+  public boolean Dead = false;
   
   public PImage Sprite;
   
@@ -118,15 +119,16 @@ class Player{
   
   
   void update(){
-    accelarationUpdate();
-    bulletUpdate();
-    
-    currentXSpeed = round(maxSpeed * speedAccX);
-    currentYSpeed = round(maxSpeed * speedAccY);
-    
-    xPos = xPos + round(currentXSpeed * deltaTime);
-    yPos = yPos + round(currentYSpeed * deltaTime);
-    
+    if(!Dead){
+      accelarationUpdate();
+      bulletUpdate();
+      
+      currentXSpeed = round(maxSpeed * speedAccX);
+      currentYSpeed = round(maxSpeed * speedAccY);
+      
+      xPos = xPos + round(currentXSpeed * deltaTime);
+      yPos = yPos + round(currentYSpeed * deltaTime);
+    }
   }
 
   void bulletUpdate(){
@@ -198,6 +200,7 @@ class Enemy{
   public float currentYSpeedF;
   public float constSpeed = 2;
   
+  public boolean Moving = true;
   
   public int speed;
   public int health;
@@ -260,7 +263,7 @@ class Bullet{
   
   public PImage Sprite;
   
-  public int damageOnHit = 10;
+  public int damageOnHit = 20;
   public boolean isOnScreen;
   
   
@@ -283,11 +286,22 @@ class Bullet{
     dist += constSpeed;
   
   }
-  
 }
 
 void updateCollisions(){
-  if(Player1.xPos >= )
+  for(int e = 0; e < maxEnemiesOnScreen; e++){
+    
+    if(enemies[e].spawnConfusion < 1){
+      
+      if(  (Player1.xPos >= enemies[e].xPos && Player1.xPos <= enemies[e].xPos + enemies[e].spriteWidth) || (Player1.xPos + Player1.spriteWidth >= enemies[e].xPos && Player1.xPos + Player1.spriteWidth <= enemies[e].xPos + enemies[e].spriteWidth) ) {
+        if(  (Player1.yPos >= enemies[e].yPos && Player1.yPos <= enemies[e].yPos + enemies[e].spriteHeight) || (Player1.yPos + Player1.spriteHeight >= enemies[e].yPos && Player1.yPos + Player1.spriteHeight <= enemies[e].yPos + enemies[e].spriteHeight)  ){
+            enemies[e].Moving = false;
+            Player1.Dead = true;
+            println("Died");
+        }
+      }
+    }
+  }
 
 }
 
@@ -309,7 +323,7 @@ void updateMovement(){
   Player1.update();
   
   for(int e = 0; e < maxEnemiesOnScreen; e++){
-    if(enemies[e].health > 1){
+    if(enemies[e].health > 1 && enemies[e].Moving){
       enemies[e].Update(Player1.xPos, Player1.yPos);
     }
   }
