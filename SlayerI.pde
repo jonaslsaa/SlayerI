@@ -63,15 +63,16 @@ void stop() {
 }
 
 void SpawnEnemies(){
-  countdown = round((countdown - 1) * deltaTime);
-  for(int e = 0; e < maxEnemiesOnScreen; e++){
-    if(enemies[e].health <= 0){
-      enemies[e].health = 100;
-      enemies[e].xPos = round(random(0, windowWidth));
-      enemies[e].yPos = round(random(0, windowHeight));
+  countdown = round((countdown - 2) * deltaTime);
+  if(countdown <= 0){ // If countdown is zero
+    for(int e = 0; e < maxEnemiesOnScreen; e++){ //Find dead enemy and resuect him
+      if(enemies[e].health <= 0){
+        enemies[e].health = 100;
+        enemies[e].xPos = round(random(0, windowWidth));
+        enemies[e].yPos = round(random(0, windowHeight));
+      }
     }
   }
-
 }
 
 class Player{
