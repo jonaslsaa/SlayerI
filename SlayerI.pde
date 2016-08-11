@@ -23,8 +23,9 @@ public boolean keyInput[] = new boolean[256];
 
 void setup(){
   size(800, 600);
+  println("LOADING...");
   frameRate(144);
-  Player1 = new Player(100, 50, 2, 6);
+  Player1 = new Player(100, 50, 6);
   enemies = new Enemy[maxEnemiesOnScreen];
   countdown = maxCountdown;
   GameSetup();
@@ -34,12 +35,11 @@ void setup(){
 void draw(){
   if(frameCount == 1){
     MakeStoneTiles();
-    println("LOADING...");
-    text("LOADING...", windowWidth/2-40, windowHeight/2-20);
+    text("LOADING...", windowWidth/2-40, windowHeight/2-15);
   } else if(frameCount == 300){
     BakedBG = loadImage("/DATA/baked_background.png");
-    println("loaded baked image with dimensions "+windowWidth+" x "+windowHeight);
-  
+    println("Loaded baked image with dimensions "+windowWidth+" x "+windowHeight);
+  println("LOADED!");
   } else if(frameCount > 300) {
     DrawStoneTiles();
     
@@ -51,6 +51,7 @@ void draw(){
     SpawnEnemies();
     
     DrawDebug();
+    checkDead();
   }
 }
 
@@ -59,7 +60,7 @@ void updateDeltaTime(){
 }
 
 void stop() {
-  String fileName = dataPath("baked_background.png");
+  String fileName = dataPath("/DATA/baked_background.png");
   File f = new File(fileName);
   if (f.exists()) {
     f.delete();
@@ -83,6 +84,16 @@ void SpawnEnemies(){
   }
 }
 
+void checkDead(){
+  if(Player1.isDead){
+    fill(200,0,0);
+    image(GameOver, windowWidth/2-200, windowHeight/2-275, 400, 200);
+    text("SCORE: "+SCORE, windowWidth/2-20, windowHeight/2-33);
+    fill(255);
+    countdown = maxCountdown;
+  }
+}
+
 class Player{
   
   public int xPos = windowWidth/2;
@@ -97,7 +108,6 @@ class Player{
   
   public int health;
   public int damage;
-  public int regenHP;
   float bulletCooldown = 0;
   public boolean isDead = false;
   
@@ -109,10 +119,9 @@ class Player{
   
   ArrayList<Bullet> bullets = new ArrayList<Bullet>();
   
-  Player(int _h, int _d, int _r, int _s){
+  Player(int _h, int _d, int _s){
     health = _h;
     damage = _d;
-    regenHP = _r;
     maxSpeed = _s;
     
   }
@@ -144,6 +153,7 @@ class Player{
     if (mousePressed && (mouseButton == LEFT)) {
         if (bulletCooldown <= 0){
           bulletCooldown = 80 * deltaTime;
+          SCORE = SCORE + 1;
           if(mouseY>yPos){
           bullets.add(new Bullet(xPos,yPos,PVector.angleBetween(new PVector(1,0),new PVector(mouseX-xPos,mouseY-yPos))));
           }else{
@@ -199,7 +209,7 @@ class Enemy{
   public int currentYSpeed;
   public float currentXSpeedF;
   public float currentYSpeedF;
-  public float constSpeed = 2;
+  public float constSpeed = 1;
   
   public boolean isDead = false;
   
@@ -247,11 +257,19 @@ class Enemy{
       xPos = xPos + currentXSpeed;
       yPos = yPos + currentYSpeed;
     }
+    
     if(health > 0 && spawnConfusion > -1){
       spawnConfusion = spawnConfusion - 1;
     }
+    
+    if(health <= 0){
+      isDead = true;
+      xPos = -100;
+      yPos = -100;
+    }
+    
+    println(health);
   }
-
 }
 
 class Bullet{
@@ -264,7 +282,7 @@ class Bullet{
   
   public PImage Sprite;
   
-  public int damageOnHit = 20;
+  public int damageOnHit = 50;
   public boolean isOnScreen;
   
   
@@ -296,13 +314,29 @@ void updateCollisions(){
       
       if(  (Player1.xPos >= enemies[e].xPos && Player1.xPos <= enemies[e].xPos + enemies[e].spriteWidth) || (Player1.xPos + Player1.spriteWidth >= enemies[e].xPos && Player1.xPos + Player1.spriteWidth <= enemies[e].xPos + enemies[e].spriteWidth) ) {
         if(  (Player1.yPos >= enemies[e].yPos && Player1.yPos <= enemies[e].yPos + enemies[e].spriteHeight) || (Player1.yPos + Player1.spriteHeight >= enemies[e].yPos && Player1.yPos + Player1.spriteHeight <= enemies[e].yPos + enemies[e].spriteHeight)  ){
-            enemies[e].isDead = true;
-            Player1.isDead = true;
+          if(!Player1.isDead){
+            SCORE = round( SCORE * ( (frameCount - 300) / (30*deltaTime) ) );
+          }
+          enemies[e].isDead = true;
+          Player1.isDead = true;
+          enemies[e].health = 0;
+          Player1.health = 0;
         }
       }
     }
   }
-
+  
+  for (int i = Player1.bullets.size(); i>0;i--){
+    for(int e = 0; e < maxEnemiesOnScreen; e++){
+      if(  (Player1.bullets.get(i-1).xPos >= enemies[e].xPos && Player1.bullets.get(i-1).xPos <= enemies[e].xPos + enemies[e].spriteWidth) || (Player1.bullets.get(i-1).xPos + 10 >= enemies[e].xPos && Player1.bullets.get(i-1).xPos + 10 <= enemies[e].xPos + enemies[e].spriteWidth) ) {
+        if(  (Player1.bullets.get(i-1).yPos >= enemies[e].yPos && Player1.bullets.get(i-1).yPos <= enemies[e].yPos + enemies[e].spriteHeight) || (Player1.bullets.get(i-1).yPos + 10 >= enemies[e].yPos && Player1.bullets.get(i-1).yPos + 10 <= enemies[e].yPos + enemies[e].spriteHeight)  ){
+          enemies[e].health = enemies[e].health - Player1.bullets.get(i-1).damageOnHit;
+          Player1.bullets.remove(i-1);
+        }
+      }
+    }
+  }
+  
 }
 
 void updateGraphics(){
