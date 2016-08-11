@@ -214,6 +214,7 @@ class Enemy{
   
   void Update(int Tx, int Ty){
     if(health > 0){
+      
       currentXSpeedF = (Tx - xPos) / constSpeed;
       currentYSpeedF = (Ty - yPos) / constSpeed;
     
@@ -222,7 +223,6 @@ class Enemy{
       
       xPos = xPos + currentXSpeed;
       yPos = yPos + currentYSpeed;
-      println("is at "+xPos+" x "+yPos);
     }
   }
 
