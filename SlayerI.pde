@@ -64,7 +64,13 @@ void stop() {
 
 void SpawnEnemies(){
   countdown = round((countdown - 1) * deltaTime);
-  for(int e = 0; e < maxEnemiesOnScreen; )
+  for(int e = 0; e < maxEnemiesOnScreen; e++){
+    if(enemies[e].health <= 0){
+      enemies[e].health = 100;
+      enemies[e].xPos = round(random(0, windowWidth));
+      enemies[e].yPos = round(random(0, windowHeight));
+    }
+  }
 
 }
 
@@ -182,10 +188,10 @@ class Enemy{
   public float rotation;
   float dist;
   
-  public int constSpeed = 5;
+  public int constSpeed = 1;
   
   public int speed;
-  public int health;
+  public int health = 0;
   public int damage;
   
   public PImage Sprite;
@@ -201,21 +207,21 @@ class Enemy{
     
   }
   
-  void Update(){
+  void Update(float _rot){
+    rotation = _rot;
     translate(xPos,yPos);
     rotate(rotation);
-    image(BulletSprite, dist, 0, 10, 10);
+    image(Sprite, dist, 0, 10, 10);
     resetMatrix();
     dist += constSpeed;
-  
   }
 
 }
 
 class Bullet{
   
-  public int xPos, yPos;
-  public float rotation;
+  public int xPos, yPos = 0;
+  public float rotation = 0;
   float dist;
   
   public int constSpeed = 4;
@@ -240,7 +246,10 @@ class Bullet{
   void Update(){
     translate(xPos,yPos);
     rotate(rotation);
-    image(BulletSprite, dist, 0, 10, 10);
+    
+    // Translate moved matrix to world cords
+    
+    
     resetMatrix();
     dist += constSpeed;
   
@@ -252,7 +261,9 @@ void updateGraphics(){
   
   //Loop through all enemies and draw them on screen
   for(int e = 0; e < maxEnemiesOnScreen; e++){
-    image(enemies[e].Sprite, enemies[e].xPos, enemies[e].yPos, enemies[e].spriteWidth, enemies[e].spriteHeight);
+    if(enemies[e].health > 0){
+      image(enemies[e].Sprite, enemies[e].xPos, enemies[e].yPos, enemies[e].spriteWidth, enemies[e].spriteHeight);
+    }
   }
   
   //Draws the Players sprite
@@ -263,6 +274,16 @@ void updateGraphics(){
 void updateMovement(){
   Player1.update();
   
+  for(int e = 0; e < maxEnemiesOnScreen; e++){
+    if(enemies[e].health > 1){
+      if(Player1.yPos>enemies[e].yPos){
+        enemies[e].Update(PVector.angleBetween(new PVector(1,0),new PVector(Player1.xPos-enemies[e].xPos,Player1.yPos-enemies[e].yPos)));
+      }
+      else {
+        enemies[e].Update(-PVector.angleBetween(new PVector(1,0),new PVector(Player1.xPos-enemies[e].xPos,Player1.yPos-enemies[e].yPos)));
+      }
+    }
+  }
 }
 
 void GameSetup(){
@@ -272,9 +293,6 @@ void GameSetup(){
     
     enemies[e].spriteHeight = round(enemies[e].Sprite.height * enemies[e].spriteMultiplier);
     enemies[e].spriteWidth = round(enemies[e].Sprite.width * enemies[e].spriteMultiplier);
-    
-    enemies[e].xPos = round(random(1,windowWidth-enemies[e].spriteWidth));
-    enemies[e].yPos = round(random(1,windowHeight-enemies[e].spriteHeight));
   }
   
   Player1.Sprite = loadImage("Slayer.png");
