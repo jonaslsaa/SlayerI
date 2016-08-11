@@ -16,6 +16,8 @@ public int maxEnemiesOnScreen = 16;
 public int maxCountdown = 500;
 public int countdown;
 
+public int SCORE = 0;
+
 public boolean keyInput[] = new boolean[256];
 
 void setup(){
@@ -31,6 +33,8 @@ void setup(){
 void draw(){
   if(frameCount == 1){
     MakeStoneTiles();
+    print("LOADING...");
+    text("LOADING...", windowWidth/2-40, windowHeight/2-20);
   } else if(frameCount == 300){
     BakedBG = loadImage("baked_background.png");
     println("loaded baked image with dimensions "+windowWidth+" x "+windowHeight);
@@ -232,9 +236,6 @@ class Enemy{
       else if(Ty < yPos){
         currentYSpeedF = -random(constSpeed*0.75, constSpeed*1.25);
       }
-      
-      
-      println(spawnConfusion);
     
       currentXSpeed = round(currentXSpeedF);
       currentYSpeed = round(currentYSpeedF);
@@ -242,7 +243,7 @@ class Enemy{
       xPos = xPos + currentXSpeed;
       yPos = yPos + currentYSpeed;
     }
-    if(health > 0 && spawnConfusion > 0 && spawnConfusion < -10){
+    if(health > 0 && spawnConfusion > -1){
       spawnConfusion = spawnConfusion - 1;
     }
   }
@@ -274,7 +275,7 @@ class Bullet{
     isOnScreen = is;
   }
   
-  void Update(){
+  void Update(){ // Special thank you to William for hepling me with the bullets
     translate(xPos,yPos);
     rotate(rotation);
     image(BulletSprite, dist, 0, 10, 10);
@@ -283,6 +284,11 @@ class Bullet{
   
   }
   
+}
+
+void updateCollisions(){
+  if(Player1.xPos >= )
+
 }
 
 void updateGraphics(){
@@ -366,7 +372,7 @@ void MakeStoneTiles(){
       image(StoneTile, w*tileSize, h*tileSize, tileSize, tileSize);
     }
   }
-  println("rendered tiles");
+  println("rendered tiles for bake");
   saveFrame("baked_background.png");
-  println("tried to save image");
+  println("saved baked image");
 }
