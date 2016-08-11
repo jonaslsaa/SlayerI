@@ -8,14 +8,19 @@ public Player Player1;
 public Enemy[] enemies;
 
 public PImage BulletSprite;
+public PImage StoneTile;
+public PImage BakedBG;
+public int nTiles = 64;
 
-public int maxEnemiesOnScreen = 8;
+public int maxEnemiesOnScreen = 16;
+public int maxCountdown = 500;
+public int countdown = 500;
 
 public boolean keyInput[] = new boolean[256];
 
 void setup(){
   size(800, 600);
-  
+  frameRate(600000);
   Player1 = new Player(100, 50, 2, 6);
   enemies = new Enemy[maxEnemiesOnScreen];
   GameSetup();
@@ -23,21 +28,45 @@ void setup(){
 }
 
 void draw(){
-  background(0);
+  if(frameCount == 1){
+    MakeStoneTiles();
+    println("Runned MakeStoneTiles();");
+  } else if(frameCount == 300){
+    BakedBG = loadImage("baked_background.png");
+    println("loaded baked image with dimensions "+windowWidth+" x "+windowHeight);
   
-  updateDeltaTime();
-  
-  updateMovement();
-  updateGraphics();
-  
-  DrawDebug();
-  
+  } else if(frameCount > 300) {
+    DrawStoneTiles();
+    
+    updateDeltaTime();
+    
+    updateMovement();
+    updateGraphics();
+    
+    SpawnEnemies();
+    
+    DrawDebug();
+  }
 }
 
 void updateDeltaTime(){
   deltaTime = (30*gameSpeedMultiplier)/frameRate;
+  maxCountdown=round(maxCountdown*deltaTime);
 }
 
+void stop() {
+  String fileName = dataPath("baked_background.png");
+  File f = new File(fileName);
+  if (f.exists()) {
+    f.delete();
+  }
+}
+
+void SpawnEnemies(){
+  countdown = round((countdown - 1) * deltaTime);
+  for(int e = 0; e < maxEnemiesOnScreen; )
+
+}
 
 class Player{
   
@@ -150,6 +179,11 @@ class Enemy{
   public int xPos;
   public int yPos;
   
+  public float rotation;
+  float dist;
+  
+  public int constSpeed = 5;
+  
   public int speed;
   public int health;
   public int damage;
@@ -166,6 +200,15 @@ class Enemy{
     speed = _s;
     
   }
+  
+  void Update(){
+    translate(xPos,yPos);
+    rotate(rotation);
+    image(BulletSprite, dist, 0, 10, 10);
+    resetMatrix();
+    dist += constSpeed;
+  
+  }
 
 }
 
@@ -175,11 +218,11 @@ class Bullet{
   public float rotation;
   float dist;
   
-  public int constSpeed = 5;
+  public int constSpeed = 4;
   
   public PImage Sprite;
   
-  public int damageOnHit = 50;
+  public int damageOnHit = 10;
   public boolean isOnScreen;
   
   
@@ -236,6 +279,7 @@ void GameSetup(){
   
   Player1.Sprite = loadImage("Slayer.png");
   BulletSprite = loadImage("Bullet.png");
+  StoneTile = loadImage("stonetile.png");
   
   Player1.spriteHeight = round(Player1.Sprite.height * Player1.spriteMultiplier);
   Player1.spriteWidth = round(Player1.Sprite.width * Player1.spriteMultiplier);
@@ -265,4 +309,21 @@ void DrawDebug(){
   text("Y Acceleration="+Player1.speedAccY, 20, 120);
   text("Bullets Alive="+Player1.bullets.size(), 20, 160);
   text("bulletCooldown="+Player1.bulletCooldown, 20, 180);
+}
+
+
+void DrawStoneTiles(){
+
+  image(BakedBG, 0, 0);
+}
+
+void MakeStoneTiles(){
+  for(int w = 0; w < round(windowWidth/nTiles)+1; w++){
+    for(int h = 0; h < round(windowHeight/nTiles)+1; h++){
+      image(StoneTile, w*nTiles, h*nTiles, nTiles, nTiles);
+    }
+  }
+  println("rendered tiles");
+  saveFrame("baked_background.png");
+  println("tried to save image");
 }
