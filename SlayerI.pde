@@ -13,7 +13,7 @@ public PImage GameOver;
 public PImage BakedBG;
 public int tileSize = 96; //Scale of tiles (auto adjusted)
 
-public int maxEnemiesOnScreen = 1;
+public int maxEnemiesOnScreen = 16;
 public int maxCountdown = 500;
 public int countdown;
 
@@ -209,7 +209,7 @@ class Enemy{
   public int currentYSpeed;
   public float currentXSpeedF;
   public float currentYSpeedF;
-  public float constSpeed = 1;
+  public float constSpeed = .5;
   
   public boolean isDead = false;
   
@@ -264,8 +264,8 @@ class Enemy{
     
     if(health <= 0){
       isDead = true;
-      xPos = -100;
-      yPos = -100;
+      xPos = -100000;
+      yPos = -100000;
     }
     
     println(health);
