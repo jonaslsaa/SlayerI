@@ -125,7 +125,7 @@ class Player{
   
     for (int i = bullets.size(); i>0;i--){
         bullets.get(i-1).Update();
-        if(bullets.get(i-1).xPos < -50  || bullets.get(i-1).yPos < -50 || bullets.get(i-1).xPos > windowWidth || bullets.get(i-1).yPos > windowWidth){
+        if(bullets.get(i-1).dist > windowWidth+windowHeight){
           bullets.remove(i-1);
         }
     }
@@ -184,11 +184,12 @@ class Enemy{
   
   public int xPos;
   public int yPos;
+  public int currentXSpeed;
+  public int currentYSpeed;
+  public float currentXSpeedF;
+  public float currentYSpeedF;
+  public float constSpeed = 0.01;
   
-  public float rotation;
-  float dist;
-  
-  public int constSpeed = 1;
   
   public int speed;
   public int health = 0;
@@ -207,13 +208,15 @@ class Enemy{
     
   }
   
-  void Update(float _rot){
-    rotation = _rot;
-    translate(xPos,yPos);
-    rotate(rotation);
-    image(Sprite, dist, 0, 10, 10);
-    resetMatrix();
-    dist += constSpeed;
+  void Update(int Tx, int Ty){
+    currentXSpeedF = (Tx - xPos) / constSpeed;
+    currentYSpeedF = (Ty - yPos) / constSpeed;
+    
+    currentXSpeed = round(currentXSpeedF);
+    currentYSpeed = round(currentYSpeedF);
+    
+    xPos = xPos + currentXSpeed;
+    yPos = yPos + currentYSpeed;
   }
 
 }
@@ -246,10 +249,7 @@ class Bullet{
   void Update(){
     translate(xPos,yPos);
     rotate(rotation);
-    
-    // Translate moved matrix to world cords
-    
-    
+    image(BulletSprite, dist, 0, 10, 10);
     resetMatrix();
     dist += constSpeed;
   
@@ -276,12 +276,7 @@ void updateMovement(){
   
   for(int e = 0; e < maxEnemiesOnScreen; e++){
     if(enemies[e].health > 1){
-      if(Player1.yPos>enemies[e].yPos){
-        enemies[e].Update(PVector.angleBetween(new PVector(1,0),new PVector(Player1.xPos-enemies[e].xPos,Player1.yPos-enemies[e].yPos)));
-      }
-      else {
-        enemies[e].Update(-PVector.angleBetween(new PVector(1,0),new PVector(Player1.xPos-enemies[e].xPos,Player1.yPos-enemies[e].yPos)));
-      }
+      enemies[e].Update(Player1.xPos, Player1.yPos);
     }
   }
 }
