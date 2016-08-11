@@ -9,6 +9,7 @@ public Enemy[] enemies;
 
 public PImage BulletSprite;
 public PImage StoneTile;
+public PImage GameOver;
 public PImage BakedBG;
 public int tileSize = 96; //Scale of tiles (auto adjusted)
 
@@ -36,7 +37,7 @@ void draw(){
     println("LOADING...");
     text("LOADING...", windowWidth/2-40, windowHeight/2-20);
   } else if(frameCount == 300){
-    BakedBG = loadImage("baked_background.png");
+    BakedBG = loadImage("/DATA/baked_background.png");
     println("loaded baked image with dimensions "+windowWidth+" x "+windowHeight);
   
   } else if(frameCount > 300) {
@@ -98,7 +99,7 @@ class Player{
   public int damage;
   public int regenHP;
   float bulletCooldown = 0;
-  public boolean Dead = false;
+  public boolean isDead = false;
   
   public PImage Sprite;
   
@@ -119,7 +120,7 @@ class Player{
   
   
   void update(){
-    if(!Dead){
+    if(!isDead){
       accelarationUpdate();
       bulletUpdate();
       
@@ -200,7 +201,7 @@ class Enemy{
   public float currentYSpeedF;
   public float constSpeed = 2;
   
-  public boolean Moving = true;
+  public boolean isDead = false;
   
   public int speed;
   public int health;
@@ -295,9 +296,8 @@ void updateCollisions(){
       
       if(  (Player1.xPos >= enemies[e].xPos && Player1.xPos <= enemies[e].xPos + enemies[e].spriteWidth) || (Player1.xPos + Player1.spriteWidth >= enemies[e].xPos && Player1.xPos + Player1.spriteWidth <= enemies[e].xPos + enemies[e].spriteWidth) ) {
         if(  (Player1.yPos >= enemies[e].yPos && Player1.yPos <= enemies[e].yPos + enemies[e].spriteHeight) || (Player1.yPos + Player1.spriteHeight >= enemies[e].yPos && Player1.yPos + Player1.spriteHeight <= enemies[e].yPos + enemies[e].spriteHeight)  ){
-            enemies[e].Moving = false;
-            Player1.Dead = true;
-            println("Died");
+            enemies[e].isDead = true;
+            Player1.isDead = true;
         }
       }
     }
@@ -314,8 +314,9 @@ void updateGraphics(){
     }
   }
   
-  //Draws the Players sprite
-  image(Player1.Sprite, Player1.xPos, Player1.yPos, Player1.spriteWidth, Player1.spriteHeight);
+  if(!Player1.isDead){ //Draws the Players sprite
+    image(Player1.Sprite, Player1.xPos, Player1.yPos, Player1.spriteWidth, Player1.spriteHeight);
+  }
   
 }
 
@@ -323,7 +324,7 @@ void updateMovement(){
   Player1.update();
   
   for(int e = 0; e < maxEnemiesOnScreen; e++){
-    if(enemies[e].health > 1 && enemies[e].Moving){
+    if(enemies[e].health > 1 && !enemies[e].isDead){
       enemies[e].Update(Player1.xPos, Player1.yPos);
     }
   }
@@ -332,15 +333,16 @@ void updateMovement(){
 void GameSetup(){
   for(int e = 0; e < maxEnemiesOnScreen; e++){
     enemies[e] = new Enemy(0, 75, 2);
-    enemies[e].Sprite = loadImage("Enemy.png");
+    enemies[e].Sprite = loadImage("/DATA/enemy.png");
     
     enemies[e].spriteHeight = round(enemies[e].Sprite.height * enemies[e].spriteMultiplier);
     enemies[e].spriteWidth = round(enemies[e].Sprite.width * enemies[e].spriteMultiplier);
   }
   
-  Player1.Sprite = loadImage("Slayer.png");
-  BulletSprite = loadImage("Bullet.png");
-  StoneTile = loadImage("stonetile.png");
+  Player1.Sprite = loadImage("/DATA/slayer.png");
+  BulletSprite = loadImage("/DATA/bullet.png");
+  GameOver = loadImage("/DATA/gameover.png");
+  StoneTile = loadImage("/DATA/stonetile.png");
   
   Player1.spriteHeight = round(Player1.Sprite.height * Player1.spriteMultiplier);
   Player1.spriteWidth = round(Player1.Sprite.width * Player1.spriteMultiplier);
