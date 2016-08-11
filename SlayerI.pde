@@ -31,7 +31,6 @@ void setup(){
 void draw(){
   if(frameCount == 1){
     MakeStoneTiles();
-    println("Runned MakeStoneTiles();");
   } else if(frameCount == 300){
     BakedBG = loadImage("baked_background.png");
     println("loaded baked image with dimensions "+windowWidth+" x "+windowHeight);
@@ -70,6 +69,7 @@ void SpawnEnemies(){
     for(int e = 0; e < maxEnemiesOnScreen; e++){ //Find dead enemy and resuect him
       if(enemies[e].health <= 0){
         enemies[e].health = 100;
+        enemies[e].spawnConfusion = 100;
         enemies[e].xPos = round(random(0, windowWidth));
         enemies[e].yPos = round(random(0, windowHeight));
         break;
@@ -192,12 +192,14 @@ class Enemy{
   public int currentYSpeed;
   public float currentXSpeedF;
   public float currentYSpeedF;
-  public float constSpeed = 100;
+  public float constSpeed = 2;
   
   
   public int speed;
   public int health;
   public int damage;
+  
+  public int spawnConfusion = 0;
   
   public PImage Sprite;
   
@@ -213,16 +215,35 @@ class Enemy{
   }
   
   void Update(int Tx, int Ty){
-    if(health > 0){
+    if(health > 0 && spawnConfusion <= 0){
       
-      currentXSpeedF = (Tx - xPos) / constSpeed;
-      currentYSpeedF = (Ty - yPos) / constSpeed;
+      if(Tx > xPos){
+        currentXSpeedF = random(constSpeed*0.75, constSpeed*1.25);
+      }
+      else if(Tx < xPos){
+        currentXSpeedF = -random(constSpeed*0.75, constSpeed*1.25);
+      }
+      else{
+      }
+      
+      if(Ty > yPos){
+        currentYSpeedF = random(constSpeed*0.75, constSpeed*1.25);
+      }
+      else if(Ty < yPos){
+        currentYSpeedF = -random(constSpeed*0.75, constSpeed*1.25);
+      }
+      
+      
+      println(spawnConfusion);
     
       currentXSpeed = round(currentXSpeedF);
       currentYSpeed = round(currentYSpeedF);
       
       xPos = xPos + currentXSpeed;
       yPos = yPos + currentYSpeed;
+    }
+    if(health > 0 && spawnConfusion > 0 && spawnConfusion < -10){
+      spawnConfusion = spawnConfusion - 1;
     }
   }
 
